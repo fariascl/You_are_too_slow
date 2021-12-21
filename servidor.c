@@ -1,13 +1,15 @@
 /*
-    PROCESO SERVIDOR
+    ╔═══════════════════════╗ 
+        PROCESO SERVIDOR
+    ╚═══════════════════════╝
 
-    Alejandro Farías S.
-    Pablo Montoya G.
+    ~ Alejandro Farías S.
+    ~ Pablo Montoya G.
 
-    Sistemas Operativos 2021-2
+    .: Sistemas Operativos 2021-2 :.
 */
 
-/* LIBRERIAS */
+/* .: LIBRERIAS :. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -16,12 +18,12 @@
 #include <fcntl.h>
 #include <signal.h>
 
-/* FUNCIONES */
+/* .: FUNCIONES :. */
 
-//* PROGRAMA PRINCIPAL *//
+/* .: PROGRAMA PRINCIPAL :. */
 int main()
 {
-    /* VARIABLES */
+    /* .: VARIABLES :. */
     int cantidadJugadores, i;
     pid_t svCliente;
 
@@ -61,10 +63,25 @@ int main()
 
     }
 
+    /*╔══════════╗ 
+        CLIENTES
+      ╚══════════╝ */
+    if(svCliente == 0)
+    {
+        
+    }
+    /*╔══════════╗ 
+        SERVIDOR
+      ╚══════════╝ */
+    else
+    {
+        
+    }
+
     //? Instrucción temporal para realizar pruebas.
     while(1);
 
     return 0;
 }
 
-/* DESARROLLO DE FUNCIONES */
+/* .: DESARROLLO DE FUNCIONES :. */

@@ -2,7 +2,9 @@
 
     Historial de pruebas:
 
-        1) Crear N hijos evitando que se transformen en procesos Zombie.
+        1) Crear N hijos evitando que se transformen en procesos Zombie. [LISTO]
+        2) Crear Matriz NxN con valores entre 1 y 50 no repetidos elegidos al azar
+                dependiendo de la dimensión de la matriz, dimensión depende del numero de jugadores.
 
 */
 
@@ -14,7 +16,7 @@
 #include <signal.h>
 
 pid_t hijo1, hijo2, hijo3, hijo4;
-int numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
+int n, numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
 
 // Función Prueba CREAR HIJOS
 void crearHijo(int numeroHijos)
