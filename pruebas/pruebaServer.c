@@ -4,7 +4,9 @@
 
         1) Manejar programa con solo 1 hijo [LISTO]
         2) Crear tubería para comunicar hijo con padre [LISTO] -> Buscar como enviar arreglo int a la tubería.
-        3) Crear 
+        3) Conectar proceso servidor con jugador mediante tubería [LISTO]
+        4) Conectar tubería teniendo varios hijos [LISTO] -> No queda claro el funcionamiento total,
+                                                                hay que hacer más pruebas.
 */
 
 #include <stdio.h>
@@ -15,6 +17,8 @@
 #include <fcntl.h>
 #include <signal.h>
 
+// Nombre de la tubería.
+#define FIFO "tuberia"
 #define N 3
 
 /* Funciones */
@@ -32,7 +36,10 @@ int main()
     int matriz[3][3];
     int cont = 1, fila, columna;
     int posicion[2];
-    char mensaje[3];
+    char mensaje[20];
+
+    // (P3) Variable que almacenará la matriz.
+    int fd, M;
 
     for(int i=0; i<3; i++)
     {
@@ -44,35 +51,79 @@ int main()
     }
 
     // (P2) Tubería.
-    int fd[2];
+    //int fd[2];
 
     // (P2) Abrir tubería.
-    pipe(fd);
+    //pipe(fd);
 
-    hijo = fork();
+    // (P4) Crear varios hijos
+    int cantidadJugadores = 2, i;
+
+    for(i=1; i <= cantidadJugadores; i++)
+    {
+        hijo = fork();
+
+        // Instrucción para dar paso a la creación de un nuevo hijo.
+        if(hijo == 0)
+        {
+            break;
+        }
+        // Mensaje de error.
+        else if(hijo == -1)
+        {
+            perror("ERROR crear proceso hijo, reinicie el programa...\n");
+			exit(1);
+			break;
+        }
+    }
 
     switch (hijo)
     {
     case 0:
 
-        //printf("Soy el hijo || PID: %d\n", getpid());
+        printf("Soy el hijo || PID: %d\n", getpid());
         //printf("[HIJO] Numero: %d\n", numero);
 
         // (P2) Cerrar Extremo Lectura de la Tubería.
-        close(fd[0]);
+        //close(fd[0]);
 
         // (P2) Escribir en la tubería la posicion a revelar.
-        printf("Ingrese fila: "); scanf("%d", &fila);
-        printf("Ingrese columna: "); scanf("%d", &columna);
+        //printf("Ingrese fila: "); scanf("%d", &fila);
+        //printf("Ingrese columna: "); scanf("%d", &columna);
 
         /*printf("Ingrese [fila columna]: ");
         fgets(mensaje, 3, stdin);*/
         //printf("Matriz: %d\n", matriz[posicion[0]][posicion[1]]);
 
-        write(fd[1], &fila, sizeof(int));
-        write(fd[1], &columna, sizeof(int));
+        //write(fd[1], &fila, sizeof(int));
+        //write(fd[1], &columna, sizeof(int));
 
         //write(fd[1], mensaje, 3);
+
+         // (P3) Cerrar tubería.
+        unlink(FIFO);
+
+        // (P3) Crear tubería.
+        if(mkfifo(FIFO, 0666) < 0)
+        {
+            perror("mkfifo");
+            exit(1);
+        }
+
+        // (P3) Abrir tubería.
+        if((fd = open(FIFO, O_RDWR)) < 0)
+        {
+            perror("open");
+            exit(1);
+        }
+
+        // Leer información contenida en la tubería.
+        while((M = read(fd, mensaje, 20)) > 0)
+        {
+            // Imprime lo leído en la tubería.
+            write(1, "Cliente dice: ", 14);
+            write(1, mensaje, M);
+        }
 
         break;
     
@@ -84,20 +135,20 @@ int main()
         //printf("[PADRE] Numero: %d\n", numero);
 
         // (P2) Cerrar Extremo Escritura de la Tubería.
-        close(fd[1]);
+        //close(fd[1]);
 
         // (P2) Recibir desde la tubería la posicion a revelar.
-        read(fd[0], &fila, sizeof(int));
-        read(fd[0], &columna, sizeof(int));
+        //read(fd[0], &fila, sizeof(int));
+        //read(fd[0], &columna, sizeof(int));
         //read(fd[0], mensaje, 3);
 
         //printf("Fila: %d || Columna: %d\n", posicion[0], posicion[1]);
 
         //printf("Valor: %d\n", matriz[posicion[0]][posicion[1]]);
         //printf("Valor: %d\n", matriz[mensaje[0]][mensaje[2]]);
-        printf("Valor: %d\n", matriz[fila][columna]);
+        //printf("Valor: %d\n", matriz[fila][columna]);
 
-        //wait(NULL);
+        wait(NULL);
 
         break;
     }
