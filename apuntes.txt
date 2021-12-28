@@ -1,0 +1,56 @@
+PREGUNTAS HECHAS AL PROFE POR CORREO.
+
+----------------------------------------------------------------------------------------------------------------
+
+PREGUNTA 1.
+
+    ¿El programa servidor deberá preguntar el número de jugadores y luego abrir los programas
+        clientes automáticamente o los programas clientes deberán ser abiertos manualmente por el usuario?
+
+    En caso de que ocurra lo contrario el programa servidor deberá encargarse de que un quinto programa cliente 
+        no pueda ser abierto ya que todos los recursos están ocupados.
+
+RESPUESTA:
+
+    El servidor sabe cuantos jugadores esperan a conectarse. Esto quiere decir que si vienen 3 jugadores, 
+        el proceso servidor deberá crear 3 procesos hijos y esperar a que se abran los procesos cliente para 
+            establecer la conexión. Los procesos clientes son otro programa que no debe ser ejecutado por el 
+                servidor, sino por el usuario.
+
+----------------------------------------------------------------------------------------------------------------
+
+PREGUNTA 2.
+
+    ¿Existirá una variable encargada de crear los N hijos para los N jugadores seleccionados o deberán existir 
+        4 variables donde cada una haga una llamada fork()? En caso de que solo exista una variable 
+            ¿Ella ejecutará el código para los N hijos simultáneamente y mediante un semáforo se deberá ver 
+                qué hijo tiene el turno?
+
+RESPUESTA:
+
+    Cada proceso hijo en el servidor tendrá asociado a su proceso cliente (revisar diagrama en enunciado). 
+        Recomiendo fuertemente la utilización de al menos un semáforo para controlar el turno, el que llega 
+            primero lo toma, este semáforo se debe heredar para que los tengan los N hijos, por lo que recomiendo
+                que cada hijo tenga un comportamiento distinto.
+
+----------------------------------------------------------------------------------------------------------------
+
+PREGUNTA 3.
+
+    ¿Tendrá algún código ejemplo o me podría explicar la forma de poder tener 2 procesos hijos y conectar 
+        una tubería por separado a su padre? Esto se debe a lo mencionado en la pregunta 2 donde he intentado
+            que el hijo 1 conecte su tubería al padre y que el hijo 2 también conecte la suya pero no he logrado
+                encontrar una forma de que ambos procesos se creen en base a una sola variable ya que para 
+                    acceder al código de cada hijo hay que preguntar si la variable es igual a 0 pero de esa 
+                        forma estaríamos manejando ambos hijos con las mismas instrucciones.
+
+RESPUESTA:
+
+    Los códigos de ejemplo lo tiene en los laboratorios y las cátedras, recordar que son tuberías sin nombre 
+        y cada proceso hijo tiene su única tubería. Lo que te puedo decir para orientar es que crees un arreglo
+            de tuberías (como una matriz de 2*Nx2, siendo N el número de jugadores) o por separado no importa,
+                lo importante es que antes de crear un nuevo hijo (fork) inicialices una o dos tuberías que
+                    quieras que el padre se comunique con ese hijo en particular y luego se ejecuta fork entonces
+                         la comunicación con ese hijo ya la tienes. Lo mismo harás con lo que les sigue.
+
+----------------------------------------------------------------------------------------------------------------
