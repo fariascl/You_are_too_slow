@@ -9,6 +9,7 @@
                                                                 hay que hacer más pruebas.
         5) Conectar jugador a hijo y bloquear acceso a la memoria mediante semáforo [PENDIENTE]
         6) Lograr que hijo reconozca pid del jugador que se conecta [LISTO]
+        7) Usar funciones de hilos para ejecutar código de cada hijo []
 */
 
 #include <stdio.h>
@@ -18,26 +19,129 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 // Nombre de la tubería.
 #define FIFO "tuberia"
 #define N 3
+// Nombre del semáforo.
+int estadoServidor, pidJugador, jugadorAsignado1, jugadorAsignado2, fd;
+sem_t semaforo;
 
 /* Funciones */
+void instruccionesHijo1();
+void instruccionesHijo2();
 
 int main()
 {
     /* Variables */
-    pid_t hijo;
+    pid_t hijo1, hijo2;
+    pthread_t hilo1, hilo2;
+
+    // (P3) Variable que almacenará la matriz.
+    int M;
+
+    // (P5) Indicar que el servidor está disponible para recibir jugadores.
+    estadoServidor = 2;
+
+    // (P3) Cerrar tubería.
+    unlink(FIFO);
+
+    // (P3) Crear tubería.
+    if(mkfifo(FIFO, 0666) < 0)
+    {
+        perror("mkfifo");
+        exit(1);
+    }
+
+    // (P3) Abrir tubería.
+    if((fd = open(FIFO, O_RDWR)) < 0)
+    {
+        perror("open");
+        exit(1);
+    }
+    
+    // (P5) Inicializar semaforo.
+    sem_init(&semaforo, 2, 1);
+
+    // (P7) Creamos 2 hijos para realizar pruebas.
+    hijo1 = fork();
+
+    printf("Esperando jugadores...\n");
+
+    if(hijo1 == 0)
+    {
+        // (P5) Abrimos hilo para asignar jugador conectado al servidor.
+        printf("Hijo 1 creado\n");
+
+        jugadorAsignado1 = 0;
+        char mensaje[20];
+
+        while(estadoServidor > 0)
+        {
+
+            if(jugadorAsignado1 == 0)
+            {
+                sem_wait(&semaforo);
+
+                read(fd, &pidJugador, sizeof(pidJugador));
+                printf("El jugador %d se conecto\n", pidJugador);
+
+                jugadorAsignado1 = pidJugador;
+                estadoServidor --;
+                sem_post(&semaforo);
+
+                printf("Faltan %d jugadores\n", estadoServidor);
+            }
+
+        }
+        
+        printf("JUGADOR ASIGNADO AL HIJO 1 -> %d\n", jugadorAsignado1);
+        printf("Estado servidor: %d\n", estadoServidor);
+    }
+    else
+    {
+        // (P7) Creamos segundo hijo.
+        if((hijo2 = fork()) == 0)
+        {
+            printf("Hijo 2 creado\n");
+
+            jugadorAsignado2 = 0;
+            char mensaje[20];
+            int M;
+
+            while(estadoServidor > 0)
+            {
+
+                if(jugadorAsignado2 == 0)
+                {
+                    sem_wait(&semaforo);
+
+                    read(fd, &pidJugador, sizeof(pidJugador));
+                    printf("El jugador %d se conecto\n", pidJugador);
+
+                    jugadorAsignado2 = pidJugador;
+                    estadoServidor --;
+                    sem_post(&semaforo);
+
+                    printf("Faltan %d jugadores\n", estadoServidor);
+                }
+
+            }
+
+            printf("JUGADOR ASIGNADO AL HIJO 2 -> %d\n", jugadorAsignado2);
+            printf("Estado servidor: %d\n", estadoServidor);
+            
+        }
+
+    }
 
     // (P2) Creación de la matriz.
     /*int matriz[3][3];
     int cont = 1, fila, columna;
     int posicion[2];*/
-    char mensaje[20];
-
-    // (P3) Variable que almacenará la matriz.
-    int fd, M;
+    //char mensaje[20];
 
     /*for(int i=0; i<3; i++)
     {
@@ -76,13 +180,13 @@ int main()
     }
     */
 
-    hijo = fork();
+    /*hijo = fork();
 
     switch (hijo)
     {
     case 0:
         
-        printf("Soy el hijo || PID: %d\n", getpid());
+        printf("Soy el hijo || PID: %d\n", getpid());*/
         //printf("[HIJO] Numero: %d\n", numero);
 
         // (P2) Cerrar Extremo Lectura de la Tubería.
@@ -100,57 +204,28 @@ int main()
         //write(fd[1], &columna, sizeof(int));
 
         //write(fd[1], mensaje, 3);
-        
-         // (P3) Cerrar tubería.
-        unlink(FIFO);
-
-        // (P3) Crear tubería.
-        if(mkfifo(FIFO, 0666) < 0)
-        {
-            perror("mkfifo");
-            exit(1);
-        }
-
-        // (P3) Abrir tubería.
-        if((fd = open(FIFO, O_RDWR)) < 0)
-        {
-            perror("open");
-            exit(1);
-        }
 
         // (P5) Identificar cuando la tubería está cerrada.
-        printf("ESTADO TUBERIA: %d\n", fd);
-
-        // Recibir pid del jugador.
-        int pidJugador, pidJugador2, jugadorAsignado;
-        read(fd, &pidJugador, sizeof(pidJugador));
-        printf("El jugador %d se conecto\n", pidJugador);
-
-        read(fd, &pidJugador2, sizeof(pidJugador2));
-        printf("El jugador %d se conecto\n", pidJugador2);
+        /*printf("ESTADO TUBERIA: %d\n", fd);
 
         jugadorAsignado = pidJugador;
 
         // Leer información contenida en la tubería.
-        while(1)
+        while(jugadorAsignado > 0)
         {
-            read(fd, &pidJugador, sizeof(pidJugador));
+            
+            M = read(fd, mensaje, 20);
 
-            if(pidJugador == jugadorAsignado)
-            {
-                M = read(fd, mensaje, 20);
+            // Imprime lo leído en la tubería.
+            printf("Jugador %d dice: ", jugadorAsignado);
+            write(1, mensaje, M);
+            printf("ESTADO TUBERIA: %d\n", fd);
 
-                // Imprime lo leído en la tubería.
-                write(1, "Cliente dice: ", 14);
-                write(1, mensaje, M);
-                printf("ESTADO TUBERIA: %d\n", fd);
-            }
+        }*/
 
-        }
-
-        break;
+        //break;
     
-    default:
+    //default:
 
         //printf("Soy el padre || PID: %d\n", getpid());
 
@@ -171,10 +246,12 @@ int main()
         //printf("Valor: %d\n", matriz[mensaje[0]][mensaje[2]]);
         //printf("Valor: %d\n", matriz[fila][columna]);
 
-        wait(NULL);
+        /*wait(NULL);
 
         break;
-    }
+    }*/
+
+    while(1);
 
     return  0;
 }

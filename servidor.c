@@ -25,7 +25,7 @@ int main()
 {
     /* .: VARIABLES :. */
     int cantidadJugadores, i;
-    pid_t svCliente;
+    pid_t servidor_Cliente1, servidor_Cliente2, servidor_Cliente3, servidor_Cliente4;
 
     // Ingreso de numero de jugadores.
     do
@@ -43,30 +43,46 @@ int main()
 
     } while (cantidadJugadores < 2 || cantidadJugadores > 4);
 
-    // Creación de procesos hijos en base al numero de jugadores seleccionados.
-    for(i=1; i <= cantidadJugadores; i++)
+    /* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
+    if((servidor_Cliente1 = fork())==0)
     {
-        svCliente = fork();
-
-        // Instrucción para dar paso a la creación de un nuevo hijo.
-        if(svCliente == 0)
-        {
-            break;
-        }
-        // Mensaje de error.
-        else if(svCliente == -1)
-        {
-            perror("ERROR crear proceso hijo, reinicie el programa...\n");
-			exit(1);
-			break;
-        }
-
+        printf("Cliente 1 creado\n");
     }
+    else
+    {
+        if((servidor_Cliente2 = fork())==0)
+        {
+            printf("Cliente 2 creado\n");
+        }
+        else
+        {
+            if(cantidadJugadores > 2)
+            {
+                if((servidor_Cliente3 = fork())==0)
+                {
+                    printf("Cliente 3 creado\n");
+                }
+                else
+                {
+                    if(cantidadJugadores == 4)
+                    {
+                        if((servidor_Cliente4 = fork())==0)
+                        {
+                            printf("Cliente 4 creado\n");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Creación de procesos hijos en base al numero de jugadores seleccionados.
+
 
     /*╔══════════╗ 
         CLIENTES
       ╚══════════╝ */
-    if(svCliente == 0)
+    if(servidor_Cliente1 == 0)
     {
         
     }
