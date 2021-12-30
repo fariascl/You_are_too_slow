@@ -27,7 +27,7 @@
 #define N 3
 // Nombre del semáforo.
 int estadoServidor, pidJugador, jugadorAsignado1, jugadorAsignado2, fd;
-sem_t semaforo;
+sem_t semaforo1, semaforo2;
 
 /* Funciones */
 void instruccionesHijo1();
@@ -39,11 +39,13 @@ int main()
     pid_t hijo1, hijo2;
     pthread_t hilo1, hilo2;
 
+    printf("PADRE %d\n\n", getpid());
+
     // (P3) Variable que almacenará la matriz.
     int M;
 
     // (P5) Indicar que el servidor está disponible para recibir jugadores.
-    estadoServidor = 2;
+    estadoServidor = 1;
 
     // (P3) Cerrar tubería.
     unlink(FIFO);
@@ -62,11 +64,38 @@ int main()
         exit(1);
     }
     
+
+    for(int i = 1; i < 3; i++)
+    {
+        if((hijo1 = fork()) == 0)
+        {
+            
+            read(fd, &pidJugador, sizeof(pidJugador));
+            printf("Jugador conectado a hijo %d\n", i);
+            break;
+        }
+        else
+        {
+            read(fd, &pidJugador, sizeof(pidJugador));
+        }
+
+    }
+
+    if(hijo1 == 0)
+    {
+
+    }
+    else
+    {
+        printf("\n\n(%d) TODOS LOS JUGADORES CONECTADOS\n\n", getpid());
+    }
+    
     // (P5) Inicializar semaforo.
-    sem_init(&semaforo, 2, 1);
+    sem_init(&semaforo1, 0, 1);
+    sem_init(&semaforo2, 0, 1);
 
     // (P7) Creamos 2 hijos para realizar pruebas.
-    hijo1 = fork();
+    /*hijo1 = fork();
 
     printf("Esperando jugadores...\n");
 
@@ -80,17 +109,17 @@ int main()
 
         while(estadoServidor > 0)
         {
-
+            
             if(jugadorAsignado1 == 0)
             {
-                sem_wait(&semaforo);
-
+                sem_wait(&semaforo1);
+                printf("\n\nESTADO SERVER %d\n\n", estadoServidor);
                 read(fd, &pidJugador, sizeof(pidJugador));
                 printf("El jugador %d se conecto\n", pidJugador);
-
+                printf("Pasaste por el hijo1\n");
                 jugadorAsignado1 = pidJugador;
                 estadoServidor --;
-                sem_post(&semaforo);
+                sem_post(&semaforo1);
 
                 printf("Faltan %d jugadores\n", estadoServidor);
             }
@@ -99,6 +128,13 @@ int main()
         
         printf("JUGADOR ASIGNADO AL HIJO 1 -> %d\n", jugadorAsignado1);
         printf("Estado servidor: %d\n", estadoServidor);
+
+        sem_wait(&semaforo1);
+
+        read(fd, &mensaje, sizeof(mensaje));
+        printf("Jugador1 dice: %s\n", mensaje);
+            
+        sem_post(&semaforo1);
     }
     else
     {
@@ -106,8 +142,6 @@ int main()
         if((hijo2 = fork()) == 0)
         {
             printf("Hijo 2 creado\n");
-
-            jugadorAsignado2 = 0;
             char mensaje[20];
             int M;
 
@@ -116,14 +150,16 @@ int main()
 
                 if(jugadorAsignado2 == 0)
                 {
-                    sem_wait(&semaforo);
+                    sem_wait(&semaforo2);
+                    
+                    printf("\n\nESTADO SERVER %d\n\n", estadoServidor);
 
                     read(fd, &pidJugador, sizeof(pidJugador));
                     printf("El jugador %d se conecto\n", pidJugador);
-
+                    printf("Pasaste por el hijo2\n");
                     jugadorAsignado2 = pidJugador;
                     estadoServidor --;
-                    sem_post(&semaforo);
+                    sem_post(&semaforo2);
 
                     printf("Faltan %d jugadores\n", estadoServidor);
                 }
@@ -132,7 +168,13 @@ int main()
 
             printf("JUGADOR ASIGNADO AL HIJO 2 -> %d\n", jugadorAsignado2);
             printf("Estado servidor: %d\n", estadoServidor);
+
+            sem_wait(&semaforo2);
+
+            read(fd, &mensaje, sizeof(mensaje));
+            printf("Jugador2 dice: %s\n", mensaje);
             
+            sem_post(&semaforo2);
         }
 
     }
@@ -255,3 +297,4 @@ int main()
 
     return  0;
 }
+

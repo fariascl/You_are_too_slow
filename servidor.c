@@ -17,6 +17,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+/* .: TUBERÍA :. */
+#define FIFO "tuberia"
 
 /* .: FUNCIONES :. */
 
@@ -24,8 +29,8 @@
 int main()
 {
     /* .: VARIABLES :. */
-    int cantidadJugadores, i;
-    pid_t servidor_Cliente1, servidor_Cliente2, servidor_Cliente3, servidor_Cliente4;
+    int cantidadJugadores, i, fd;
+    pid_t servidor_Cliente, pidJugador;
 
     // Ingreso de numero de jugadores.
     do
@@ -43,37 +48,68 @@ int main()
 
     } while (cantidadJugadores < 2 || cantidadJugadores > 4);
 
-    /* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
-    if((servidor_Cliente1 = fork())==0)
+    /* .: VARIABLES (Se necesita saber cantidad de jugadores para iniciarlas) :. */
+    int tuberiasPIPE[cantidadJugadores*2][2];
+    //sem_t semaforos[cantidadJugadores];
+
+    // Iniciamos semaforos.
+    //sem_init(&semaforo1, 0, 1);
+    //sem_init(&semaforos, 0, 1);
+
+    /* .: CREACIÓN DE TUBERÍA FIFO PARA COMUNICACIÓN CON SERVIDOR - JUGADOR :. */
+    unlink(FIFO);
+
+    // Crear tubería.
+    if(mkfifo(FIFO, 0666) < 0)
     {
-        printf("Cliente 1 creado\n");
+        perror("mkfifo");
+        exit(1);
     }
-    else
+
+    // Abrir tubería.
+    if((fd = open(FIFO, O_RDWR)) < 0)
     {
-        if((servidor_Cliente2 = fork())==0)
+        perror("open");
+        exit(1);
+    }
+
+    /* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
+    for(int i = 1; i <= cantidadJugadores; i++)
+    {
+
+        //* Creamos tubería para que SERVIDOR - CLIENTE pueda escribir *//
+        if(pipe(tuberiasPIPE[i*2]) < 0)
         {
-            printf("Cliente 2 creado\n");
+            printf("ERROR!\n");
+            exit(1);
         }
+
+        //* Creamos tubería para que SERVIDOR - CLIENTE pueda leer *//
+        if(pipe(tuberiasPIPE[(i*2)+1]) < 0)
+        {
+            printf("ERROR!\n");
+            exit(1);
+        }
+
+        //* Código de SERVIDOR - CLIENTE *//
+        if((servidor_Cliente = fork()) == 0)
+        {
+            close(tuberiasPIPE[i*2][0]);
+            close(tuberiasPIPE[(i*2)+1][1])
+
+            read(fd, &pidJugador, sizeof(pidJugador));
+            printf("Jugador %d conectado\n", i);
+            break;
+        }
+        //* Código de SERVIDOR - PADRE *//
         else
         {
-            if(cantidadJugadores > 2)
-            {
-                if((servidor_Cliente3 = fork())==0)
-                {
-                    printf("Cliente 3 creado\n");
-                }
-                else
-                {
-                    if(cantidadJugadores == 4)
-                    {
-                        if((servidor_Cliente4 = fork())==0)
-                        {
-                            printf("Cliente 4 creado\n");
-                        }
-                    }
-                }
-            }
+            close(tuberiasPIPE[i*2][1]);
+            close(tuberiasPIPE[(i*2)+1][0])
+
+            read(fd, &pidJugador, sizeof(pidJugador));
         }
+
     }
     
     // Creación de procesos hijos en base al numero de jugadores seleccionados.
@@ -82,7 +118,7 @@ int main()
     /*╔══════════╗ 
         CLIENTES
       ╚══════════╝ */
-    if(servidor_Cliente1 == 0)
+    if(servidor_Cliente == 0)
     {
         
     }
@@ -91,7 +127,7 @@ int main()
       ╚══════════╝ */
     else
     {
-        
+        printf("\n\n(%d) TODOS LOS JUGADORES CONECTADOS\n\n", getpid());
     }
 
     //? Instrucción temporal para realizar pruebas.

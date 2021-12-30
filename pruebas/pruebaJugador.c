@@ -35,11 +35,13 @@ int main()
     pid = getpid();
 
     write(fd, &pid, sizeof(pid));
+    write(fd, &pid, sizeof(pid));
 
     // (P1) Leer mensaje por teclado para enviar a la tubería.
+    printf("\nEscribe algo: ");
     while((n = read(0, mensaje, 20)) > 0)
     {
-        write(fd, &pid, sizeof(pid));
+        //write(fd, &pid, sizeof(pid));
         write(fd, mensaje, n);
     }
 

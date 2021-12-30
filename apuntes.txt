@@ -54,3 +54,38 @@ RESPUESTA:
                          la comunicación con ese hijo ya la tienes. Lo mismo harás con lo que les sigue.
 
 ----------------------------------------------------------------------------------------------------------------
+
+ALGORITMO CREACION DE N hijos
+
+/* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
+    if((servidor_Cliente1 = fork())==0)
+    {
+        printf("Cliente 1 creado\n");
+    }
+    else
+    {
+        if((servidor_Cliente2 = fork())==0)
+        {
+            printf("Cliente 2 creado\n");
+        }
+        else
+        {
+            if(cantidadJugadores > 2)
+            {
+                if((servidor_Cliente3 = fork())==0)
+                {
+                    printf("Cliente 3 creado\n");
+                }
+                else
+                {
+                    if(cantidadJugadores == 4)
+                    {
+                        if((servidor_Cliente4 = fork())==0)
+                        {
+                            printf("Cliente 4 creado\n");
+                        }
+                    }
+                }
+            }
+        }
+    }
