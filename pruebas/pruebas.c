@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <time.h>
 
 pid_t hijo1, hijo2, hijo3, hijo4;
 int n, numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
@@ -28,28 +30,115 @@ void crearHijo(int numeroHijos)
 
 int main()
 {
-    int i, numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
-    int jugadores = 4;
+    int i, j, DIMENSION, numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
+    int valoresRepartidos, valoresIngresados;
+    int cantidadJugadores = 2;
     pid_t hijo;
+    bool continuarLlenado;
 
-    for(i=1; i<=jugadores; i++)
+    srand(time(NULL));
+
+    //* (P2) MATRIZ REAL *//
+    if(cantidadJugadores == 2)
     {
-        hijo = fork();
+        DIMENSION = 8;
+        valoresRepartidos = 16;
+    }
+    
+    if(cantidadJugadores == 3)
+    {
+        DIMENSION = 10;
+        valoresRepartidos = 25;
+    }
 
-        if(hijo == 0)
+    if(cantidadJugadores == 4)
+    {
+        DIMENSION = 12;
+        valoresRepartidos = 36;
+    }
+
+    int matrizReal[DIMENSION][DIMENSION];
+    int valoresMatriz[valoresRepartidos];
+
+    //? Crear arreglo con N valores repartidos no repetidos.
+    for(i = 0; i < valoresRepartidos; i++)
+    {
+
+        do
         {
-            break;
-        }
+            continuarLlenado = true;
+
+            valoresMatriz[i] = (rand()%50)+1;
+
+            for(j = 0; j < i; j++)
+            {
+                if(valoresMatriz[i] == valoresMatriz[j])
+                {
+                    continuarLlenado = false;
+                }
+            }
+
+        } while (continuarLlenado == false);
+        
     }
 
-    if(hijo == 0)
+    //* Llenar matriz con valores del arreglo.
+    do
     {
-        printf("Soy un hijo || PID %d\n", getpid());
+        valoresIngresados = valoresRepartidos-1;
+
+        for(i = 0; i < DIMENSION; i++)
+        {
+            for(j = 0; j < DIMENSION; j++)
+            {
+
+                matrizReal[i][j] = rand()%2;
+
+                if(matrizReal[i][j] == 1 && valoresIngresados >= 0)
+                {
+                    matrizReal[i][j] = valoresMatriz[valoresIngresados];
+                    valoresIngresados --;
+                }
+                else if(matrizReal[i][j] == 1 && valoresIngresados < 0)
+                {
+                    matrizReal[i][j] = 0;
+                }
+
+            }
+        }
+
+    } while (valoresIngresados >= 0);
+    
+
+    // Imprimimos arreglo.
+    printf("Arreglo:\n\n");
+
+    for(i = 0; i < valoresRepartidos; i++)
+    {
+        printf("Posicion %d: [%d]\n", i, valoresMatriz[i]);
     }
 
-    printf("HOLAAAAAAAA\n");
+    // Imprimimos matriz.
+    printf("Matriz:\n\n");
 
-    while(1);
+    for(i = 0; i < DIMENSION; i++)
+    {
+        for(j = 0; j < DIMENSION; j++)
+        {
+
+            if(matrizReal[i][j] > 9)
+            {
+                printf("[ %d ]", matrizReal[i][j]);
+            }
+            else
+            {
+                printf("[ %d  ]", matrizReal[i][j]);
+            }
+
+        }
+
+        printf("\n");
+    }
 
     return 0;
 }

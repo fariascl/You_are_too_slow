@@ -24,12 +24,13 @@
 #define FIFO "tuberia"
 
 /* .: FUNCIONES :. */
+//void llenarMatrizOculta(int filas, int columnas);
 
 /* .: PROGRAMA PRINCIPAL :. */
 int main()
 {
     /* .: VARIABLES :. */
-    int cantidadJugadores, i, fd;
+    int cantidadJugadores, i, fd, DIMENSION;
     pid_t servidor_Cliente, pidJugador;
 
     // Ingreso de numero de jugadores.
@@ -50,11 +51,7 @@ int main()
 
     /* .: VARIABLES (Se necesita saber cantidad de jugadores para iniciarlas) :. */
     int tuberiasPIPE[cantidadJugadores*2][2];
-    //sem_t semaforos[cantidadJugadores];
-
-    // Iniciamos semaforos.
-    //sem_init(&semaforo1, 0, 1);
-    //sem_init(&semaforos, 0, 1);
+    sem_t semaforos[cantidadJugadores];
 
     /* .: CREACIÓN DE TUBERÍA FIFO PARA COMUNICACIÓN CON SERVIDOR - JUGADOR :. */
     unlink(FIFO);
@@ -73,9 +70,30 @@ int main()
         exit(1);
     }
 
+    /* .: CREACIÓN de MATRIZ COMPARTIDA PARA PROCESOS SERVIDOR - CLIENTE :. */
+    if(cantidadJugadores == 2)
+    {
+        DIMENSION = 8;
+    }
+    
+    if(cantidadJugadores == 3)
+    {
+        DIMENSION = 10;
+    }
+
+    if(cantidadJugadores == 4)
+    {
+        DIMENSION = 12;
+    }
+
+    int matrizOculta[DIMENSION][DIMENSION];
+
     /* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
     for(int i = 1; i <= cantidadJugadores; i++)
     {
+
+        //* Iniciamos semáforo por posición *//
+        sem_init(&semaforos[i], 0, 0);
 
         //* Creamos tubería para que SERVIDOR - CLIENTE pueda escribir *//
         if(pipe(tuberiasPIPE[i*2]) < 0)
@@ -95,7 +113,7 @@ int main()
         if((servidor_Cliente = fork()) == 0)
         {
             close(tuberiasPIPE[i*2][0]);
-            close(tuberiasPIPE[(i*2)+1][1])
+            close(tuberiasPIPE[(i*2)+1][1]);
 
             read(fd, &pidJugador, sizeof(pidJugador));
             printf("Jugador %d conectado\n", i);
@@ -105,15 +123,12 @@ int main()
         else
         {
             close(tuberiasPIPE[i*2][1]);
-            close(tuberiasPIPE[(i*2)+1][0])
+            close(tuberiasPIPE[(i*2)+1][0]);
 
             read(fd, &pidJugador, sizeof(pidJugador));
         }
 
     }
-    
-    // Creación de procesos hijos en base al numero de jugadores seleccionados.
-
 
     /*╔══════════╗ 
         CLIENTES
@@ -127,7 +142,23 @@ int main()
       ╚══════════╝ */
     else
     {
-        printf("\n\n(%d) TODOS LOS JUGADORES CONECTADOS\n\n", getpid());
+        /* .: CREACIÓN de MATRIZ PARA PROCESO SERVIDOR - PADRE :. */
+        if(cantidadJugadores == 2)
+        {
+            DIMENSION = 8;
+        }
+        
+        if(cantidadJugadores == 3)
+        {
+            DIMENSION = 10;
+        }
+
+        if(cantidadJugadores == 4)
+        {
+            DIMENSION = 12;
+        }
+
+        int matrizReal[DIMENSION][DIMENSION];
     }
 
     //? Instrucción temporal para realizar pruebas.
