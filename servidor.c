@@ -9,28 +9,38 @@
     .: Sistemas Operativos 2021-2 :.
 */
 
-/* .: LIBRERIAS :. */
+//* .: LIBRERIAS :. *//
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
-/* .: TUBERÍA :. */
+//* .: TUBERÍA :. *//
 #define FIFO "tuberia"
 
-/* .: FUNCIONES :. */
+//* .: FUNCIONES :. *//
 //void llenarMatrizOculta(int filas, int columnas);
 
-/* .: PROGRAMA PRINCIPAL :. */
+//* .: PROGRAMA PRINCIPAL :. *//
 int main()
 {
-    /* .: VARIABLES :. */
-    int cantidadJugadores, i, fd, DIMENSION;
+    //* .: VARIABLES :. *//
+    int cantidadJugadores, fd;
+
+    // Variables para procesos SERVIDOR - CLIENTE.
+    int numeroHijo;
+
+    // Variables para desarrollar Matriz Real.
+    int i, j, DIMENSION, valoresRepartidos, valoresIngresados;
+    bool continuarLlenado;
+
     pid_t servidor_Cliente, pidJugador;
 
     // Ingreso de numero de jugadores.
@@ -49,28 +59,37 @@ int main()
 
     } while (cantidadJugadores < 2 || cantidadJugadores > 4);
 
-    /* .: VARIABLES (Se necesita saber cantidad de jugadores para iniciarlas) :. */
+    //* .: VARIABLES (Se necesita saber cantidad de jugadores para iniciarlas) :. *//
+    int estadoServer = cantidadJugadores;
     int tuberiasPIPE[cantidadJugadores*2][2];
-    sem_t semaforos[cantidadJugadores];
+    sem_t *semaforos = mmap(NULL, sizeof(sem_t)*cantidadJugadores, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
-    /* .: CREACIÓN DE TUBERÍA FIFO PARA COMUNICACIÓN CON SERVIDOR - JUGADOR :. */
+    // Iniciar N semáforos //
+    for(i = 0; i < cantidadJugadores; i++)
+    {
+        sem_init(&semaforos[i], 1, 0);
+    }
+
+    //* .: CREACIÓN DE TUBERÍA FIFO PARA COMUNICACIÓN CON SERVIDOR - JUGADOR :. *//
     unlink(FIFO);
 
-    // Crear tubería.
+    // Crear tubería //
     if(mkfifo(FIFO, 0666) < 0)
     {
         perror("mkfifo");
         exit(1);
     }
 
-    // Abrir tubería.
+    // Abrir tubería //
     if((fd = open(FIFO, O_RDWR)) < 0)
     {
         perror("open");
         exit(1);
     }
 
-    /* .: CREACIÓN de MATRIZ COMPARTIDA PARA PROCESOS SERVIDOR - CLIENTE :. */
+    //* .: CREACIÓN de MATRIZ COMPARTIDA PARA PROCESOS SERVIDOR - CLIENTE :. *//
+
+    // Asignar dimensión de las matrices //
     if(cantidadJugadores == 2)
     {
         DIMENSION = 8;
@@ -86,40 +105,53 @@ int main()
         DIMENSION = 12;
     }
 
-    int matrizOculta[DIMENSION][DIMENSION];
+    // Declaración de matriz oculta //
+    char (*matrizOculta)[DIMENSION] = mmap(NULL, sizeof(char)*DIMENSION*DIMENSION, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
-    /* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
-    for(int i = 1; i <= cantidadJugadores; i++)
+    for(i = 0; i < DIMENSION; i++)
+    {
+        for(j = 0; j < DIMENSION; j++)
+        {
+            matrizOculta[i][j] = 'O'; // Posición disponible 'O' | Posición revelada 'X'
+        }
+    }
+
+    //* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. *//
+    for(int i = 0; i < cantidadJugadores; i++)
     {
 
-        //* Iniciamos semáforo por posición *//
-        sem_init(&semaforos[i], 0, 0);
-
-        //* Creamos tubería para que SERVIDOR - CLIENTE pueda escribir *//
+        // Creamos tubería para que SERVIDOR - CLIENTE pueda escribir //
         if(pipe(tuberiasPIPE[i*2]) < 0)
         {
             printf("ERROR!\n");
             exit(1);
         }
 
-        //* Creamos tubería para que SERVIDOR - CLIENTE pueda leer *//
+        // Creamos tubería para que SERVIDOR - CLIENTE pueda leer //
         if(pipe(tuberiasPIPE[(i*2)+1]) < 0)
         {
             printf("ERROR!\n");
             exit(1);
         }
 
-        //* Código de SERVIDOR - CLIENTE *//
+        //? Código de SERVIDOR - CLIENTE //
         if((servidor_Cliente = fork()) == 0)
         {
+            // Cerrar extremos de las tuberías.
             close(tuberiasPIPE[i*2][0]);
             close(tuberiasPIPE[(i*2)+1][1]);
 
+            // Recibir PID de proceso JUGADOR.
             read(fd, &pidJugador, sizeof(pidJugador));
+
+            // Asignar numero de jugador a proceso SERVIDOR - CLIENTE.
+            numeroHijo = i;
+
             printf("Jugador %d conectado\n", i);
+            estadoServer --;
             break;
         }
-        //* Código de SERVIDOR - PADRE *//
+        //? Código de SERVIDOR - PADRE //
         else
         {
             close(tuberiasPIPE[i*2][1]);
@@ -130,35 +162,133 @@ int main()
 
     }
 
+    //* .: ESPERAR A QUE SE CONECTEN JUGADORES :. *//
+    if(servidor_Cliente == 0)
+    {
+        // Pausar ejecución de proceso SERVIDOR - CLIENTE para esperar nuevos jugadores.
+        sem_wait(&semaforos[numeroHijo]);
+    }
+    else
+    {
+        // Reanudar ejecucion de procesos SERVIDOR - CLIENTE.
+        for(i = 0; i < cantidadJugadores; i++)
+        {
+            sem_post(&semaforos[i]);
+        }
+    }
+
+    //! PRUEBA PARA PAUSAR PROGRAMA //
+    /*while(estadoServer > 0)
+    {
+        printf("Esperando ...\n");
+        sleep(2);
+    }*/
+
+    //* .: CÓDIGO DEL JUEGO :. *//
+
     /*╔══════════╗ 
         CLIENTES
       ╚══════════╝ */
     if(servidor_Cliente == 0)
     {
-        
+        printf("Jugador %d: Comienza el juego!!\n", getpid());
     }
     /*╔══════════╗ 
         SERVIDOR
       ╚══════════╝ */
     else
     {
-        /* .: CREACIÓN de MATRIZ PARA PROCESO SERVIDOR - PADRE :. */
+        //* .: CREACIÓN de MATRIZ PARA PROCESO SERVIDOR - PADRE :. *//
         if(cantidadJugadores == 2)
         {
-            DIMENSION = 8;
+            valoresRepartidos = 16;
         }
         
         if(cantidadJugadores == 3)
         {
-            DIMENSION = 10;
+            valoresRepartidos = 25;
         }
 
         if(cantidadJugadores == 4)
         {
-            DIMENSION = 12;
+            valoresRepartidos = 36;
         }
 
+        // Se declara Matriz Real y arreglo con valores repartidos en la matriz.
         int matrizReal[DIMENSION][DIMENSION];
+        int valoresMatriz[valoresRepartidos];
+
+        //? Crear arreglo con N valores repartidos no repetidos.
+        for(i = 0; i < valoresRepartidos; i++)
+        {
+
+            do
+            {
+                continuarLlenado = true;
+
+                valoresMatriz[i] = (rand()%50)+1;
+
+                for(j = 0; j < i; j++)
+                {
+                    if(valoresMatriz[i] == valoresMatriz[j])
+                    {
+                        continuarLlenado = false;
+                    }
+                }
+
+            } while (continuarLlenado == false);
+
+        }
+
+        // Llenar matriz con valores del arreglo //
+        do
+        {
+            valoresIngresados = valoresRepartidos-1;
+
+            for(i = 0; i < DIMENSION; i++)
+            {
+                for(j = 0; j < DIMENSION; j++)
+                {
+
+                    matrizReal[i][j] = rand()%2;
+
+                    if(matrizReal[i][j] == 1 && valoresIngresados >= 0)
+                    {
+                        matrizReal[i][j] = valoresMatriz[valoresIngresados];
+                        valoresIngresados --;
+                    }
+                    else if(matrizReal[i][j] == 1 && valoresIngresados < 0)
+                    {
+                        matrizReal[i][j] = 0;
+                    }
+
+                }
+            }
+
+        } while (valoresIngresados >= 0);
+
+        /*printf("HOLA SOY EL PADRE, MIRA LA MATRIZ:\n");
+
+        for(i = 0; i < DIMENSION; i++)
+        {
+            for(j = 0; j < DIMENSION; j++)
+            {
+
+                if(matrizReal[i][j] > 9)
+                {
+                    printf("[ %d ]", matrizReal[i][j]);
+                }
+                else
+                {
+                    printf("[ %d  ]", matrizReal[i][j]);
+                }
+
+            }
+
+            printf("\n");
+        }*/
+
+        printf("PADRE: Esta todo listo\n");
     }
 
     //? Instrucción temporal para realizar pruebas.
@@ -167,4 +297,4 @@ int main()
     return 0;
 }
 
-/* .: DESARROLLO DE FUNCIONES :. */
+//* .: DESARROLLO DE FUNCIONES :. *//

@@ -89,3 +89,26 @@ ALGORITMO CREACION DE N hijos
             }
         }
     }
+
+----------------------------------------------------------------------------------------------------------------
+
+IMPRIMIR MATRIZ
+
+    printf("MIRA LA MATRIZ OCULTA: \n");
+
+    for(i = 0; i < DIMENSION; i++)
+    {
+        for(j = 0; j < DIMENSION; j++)
+        {
+            printf("[%c]", matrizOculta[i][j]);
+        }
+
+        printf("\n");
+
+    }
+
+----------------------------------------------------------------------------------------------------------------
+
+BANDERA DE JUGADOR
+
+printf("Jugador %d paso por aqui\n", numeroHijo);

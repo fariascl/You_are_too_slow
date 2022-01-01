@@ -32,7 +32,7 @@ int main()
 {
     int i, j, DIMENSION, numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
     int valoresRepartidos, valoresIngresados;
-    int cantidadJugadores = 2;
+    int cantidadJugadores = 4;
     pid_t hijo;
     bool continuarLlenado;
 
@@ -115,7 +115,7 @@ int main()
 
     for(i = 0; i < valoresRepartidos; i++)
     {
-        printf("Posicion %d: [%d]\n", i, valoresMatriz[i]);
+        printf("[%d]", valoresMatriz[i]);
     }
 
     // Imprimimos matriz.
