@@ -25,12 +25,27 @@
 //* .: TUBERÍA :. *//
 #define FIFO "tuberia"
 
+//* .: VARIABLES GLOBALES :. *//
+siginfo_t informacionProceso;
+
 //* .: FUNCIONES :. *//
 //void llenarMatrizOculta(int filas, int columnas);
+void instruccionJuego();
 
 //* .: PROGRAMA PRINCIPAL :. *//
 int main()
 {
+    //* .: MANEJO DE SEÑALES :. *//
+    signal(SIGUSR1, &instruccionJuego);
+    signal(SIGUSR2, &instruccionJuego);
+
+    sigset_t lista_Signals;
+
+    sigemptyset(&lista_Signals); // Limpiar variable.
+    sigaddset(&lista_Signals, SIGUSR1);
+    sigaddset(&lista_Signals, SIGUSR2);
+    sigprocmask(SIG_BLOCK, &lista_Signals, NULL);
+
     //* .: VARIABLES :. *//
     int cantidadJugadores, fd;
 
@@ -192,6 +207,27 @@ int main()
     if(servidor_Cliente == 0)
     {
         printf("Jugador %d: Comienza el juego!!\n", getpid());
+
+        // Esperar a que se reciba señal (Información) para empezar el turno.
+        int signal_info = sigwaitinfo(&lista_Signals, &informacionProceso); // Informacion de la señal que envió el que robó el turno
+
+        switch (signal_info)
+        {
+            // Señal SIGUSR1 (kill -l)
+            case 10:
+                
+                break;
+            
+            // Señal SIGUSR2 (kill -l)
+            case 12:
+
+                break;
+
+            default:
+                // Error
+                break;
+        }
+
     }
     /*╔══════════╗ 
         SERVIDOR
@@ -288,7 +324,29 @@ int main()
             printf("\n");
         }*/
 
-        printf("PADRE: Esta todo listo\n");
+        //printf("PADRE: Esta todo listo\n");
+
+        //* .: DESARROLLO DEL JUEGO :. *//
+
+        // Esperar a que se reciba señal (Información) para empezar el turno.
+        int signal_info = sigwaitinfo(&lista_Signals, &informacionProceso); // Informacion de la señal que envió el que robó el turno
+
+        switch (signal_info)
+        {
+            // Señal SIGUSR1 (kill -l)
+            case 10:
+                
+                break;
+            
+            // Señal SIGUSR2 (kill -l)
+            case 12:
+
+                break;
+
+            default:
+                // Error
+                break;
+        }
     }
 
     //? Instrucción temporal para realizar pruebas.
@@ -298,3 +356,9 @@ int main()
 }
 
 //* .: DESARROLLO DE FUNCIONES :. *//
+
+/* ESCRIBIR LO QUE HACE LA FUNCIÓN */
+void instruccionJuego()
+{
+
+}

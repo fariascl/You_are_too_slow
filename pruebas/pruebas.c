@@ -28,6 +28,9 @@ void crearHijo(int numeroHijos)
     while(1);
 }
 
+// Presentación del juego
+void presentacion();
+
 int main()
 {
     int i, j, DIMENSION, numero = 0, numeroHijo1 = 0, numeroHijo2 = 0, numeroHijo3 = 0, numeroHijo4 = 0;
@@ -35,6 +38,9 @@ int main()
     int cantidadJugadores = 4;
     pid_t hijo;
     bool continuarLlenado;
+
+    presentacion();
+    printf("Ingresa algo: "); scanf("%d", &cantidadJugadores);
 
     srand(time(NULL));
 
@@ -142,3 +148,22 @@ int main()
 
     return 0;
 }
+
+// Presentación del juego.
+void presentacion()
+{
+    // You Are.
+    printf(" __ __            _____ \n");
+    printf("|  |  |___ _ _   |  _  |___ ___\n");
+    printf("|_   _| . | | |  |     |  _| -_|\n");
+    printf("  |_| |___|___|  |__|__|_| |___|\n\n");
+
+    // Too Slow !.
+    printf("\t                                       __ \n");
+    printf("\t _____            _____ _             |  |\n");
+    printf("\t|_   _|___ ___   |   __| |___ _ _ _   |  |\n");
+    printf("\t  | | | . | . |  |__   | | . | | | |  |__|\n");
+    printf("\t  |_| |___|___|  |_____|_|___|_____|  |__|\n\n");
+}
+
+//printf("\t\n");
