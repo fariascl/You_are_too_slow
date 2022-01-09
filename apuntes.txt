@@ -55,6 +55,27 @@ RESPUESTA:
 
 ----------------------------------------------------------------------------------------------------------------
 
+PREGUNTA 4.
+
+    ¿El jugador puede ver su puntaje o solo ve los mensajes guía cómo "Presiona para robar el turno"?
+
+RESPUESTA:
+
+    El jugador no sabe que puntaje tiene, pero si sabe cuando acertó una o se equivocó.
+
+----------------------------------------------------------------------------------------------------------------
+
+PREGUNTA 5.
+
+    Si el jugador envía una coordenada ya revelada o errónea, ¿Puede volver a ingresar 
+        los valores o perdió el turno?
+
+RESPUESTA:
+
+    Si un jugador se equivoca o da una coordenadas errónea pierde el turno.
+
+----------------------------------------------------------------------------------------------------------------
+
 ALGORITMO CREACION DE N hijos
 
 /* .: CREACIÓN de PROCESOS SERVIDOR - CLIENTE :. */
@@ -112,3 +133,21 @@ IMPRIMIR MATRIZ
 BANDERA DE JUGADOR
 
 printf("Jugador %d paso por aqui\n", numeroHijo);
+
+----------------------------------------------------------------------------------------------------------------
+
+ENVIO DE PID's ENTRE CLIENTE Y JUGADOR
+
+SERVIDOR CLIENTE                               CLIENTE JUGADOR
+
+    PID Jugador (int)       <------------       PID (int)
+
+    PID (pid_t)             ------------>       PID Cliente (pid_t)
+
+----------------------------------------------------------------------------------------------------------------
+
+TERMINAR ALGORITMOS
+
+- Leer coordenadas y modificar la matriz Oculta.
+- Asignar puntaje al jugador.
+- Finalizar turno dándole todos los permisos a los jugadores para prepararse para el nuevo turno.

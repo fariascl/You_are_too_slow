@@ -30,6 +30,7 @@ void crearHijo(int numeroHijos)
 
 // Presentación del juego
 void presentacion();
+void titulo();
 
 int main()
 {
@@ -40,6 +41,20 @@ int main()
     bool continuarLlenado;
 
     presentacion();
+    
+    /*if((hijo = fork()) == 0)
+    {
+        printf("Hijo %d\n", hijo);
+    }
+    else
+    {
+        printf("Padre %d\n", hijo);
+    }*/
+
+    printf("Ingresa algo: "); scanf("%d", &cantidadJugadores);
+
+    titulo();
+
     printf("Ingresa algo: "); scanf("%d", &cantidadJugadores);
 
     srand(time(NULL));
@@ -151,6 +166,24 @@ int main()
 
 // Presentación del juego.
 void presentacion()
+{
+    printf("    		                               -     =    .--._ \n");
+    printf("		                         - - ~_=  =~_- = - `.  `-. \n");
+    printf(" __ __            ____                 ==~_ = =_  ~ -   =  .-'    `. \n");
+    printf("|  |  |___ _ _   |  _  |___ ___      --=~_ - ~  == - =   .'      _..:._ \n");
+    printf("|_   _| . | | |  |     |  _| -_|        ~  --       =   `.  .--.'      `. \n");
+    printf("  |_| |___|___|  |__|__|_| |___|              _ - =  -  _.'  `.      .--.: \n");
+    printf("				  	       =  ~-  .'      :     :    : \n");
+    printf("                                       __  ~=  = - _-`--.     :  .--:    D \n");
+    printf(" _____            _____ _             |  |~ _=  =  -~_=  `;  .'.:   ,`---'@ \n");
+    printf("|_   _|___ ___   |   __| |___ _ _ _   |  |    ~-   -=   .'  .'  `._ `-.__.' \n");
+    printf("  | | | . | . |  |__   | | . | | | |  |__| == ~=  =-  .'  .'     _.`---' \n");
+    printf("  |_| |___|___|  |_____|_|___|_____|  |__| ~ - =~  .'--''   .   `-..__.--. \n");
+    printf("					  --    ~-=  =-~_-   `-..___(  ===;\n");
+    printf("					  - =__ ~-=  - -    .'       `---'\n\n");
+}
+
+void titulo()
 {
     // You Are.
     printf(" __ __            _____ \n");
